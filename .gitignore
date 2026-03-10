@@ -48,3 +48,6 @@ ngrok.exe
 # Logs
 *.log
 npm-debug.log*
+
+.antigravity/
+
