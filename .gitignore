@@ -1,0 +1,50 @@
+# Environment variables — NEVER commit
+.env
+
+# Node dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+frontend/build/
+frontend/.cache/
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Generated files (served from backend)
+backend/public/documents/
+backend/public/evidence/photos/
+backend/public/evidence/videos/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# DigitalOcean build artifacts
+.cache/
+
+# Planning Documents — Credara DOCX source files
+Credara_Blueprint_v3.docx
+Credara_Build_Guide_v3.docx
+Credara_Explainer_v3.docx
+Credara_Folder_Structure_v3.docx
+Credara_Master_Prompt_File_v3.docx
+Credara_Missing_Pieces_v3.docx
+Credara_Tools_Guide_v3.docx
+
+# Build notes and planning documents
+CREDARA_BUILD_NOTES.md
+
+# ngrok
+ngrok.exe
+.ngrok2/
+
+# Logs
+*.log
+npm-debug.log*
