@@ -144,4 +144,21 @@ async function generateProfile(req, res) {
   }
 }
 
-module.exports = { extractSkills, followupQuestions, generateProfile };
+// GET /api/ai/my-profile
+async function getMyProfile(req, res) {
+  try {
+    const result = await db.query(
+      `SELECT * FROM work_profiles WHERE worker_id = $1 AND status = 'complete' ORDER BY id DESC LIMIT 1`,
+      [req.worker.id]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ success: false, error: 'No complete profile found' });
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error('[aiController] getMyProfile error:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to get profile' });
+  }
+}
+
+module.exports = { extractSkills, followupQuestions, generateProfile, getMyProfile };
