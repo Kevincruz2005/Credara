@@ -1,5 +1,5 @@
 # Environment variables — NEVER commit
-.env
+.env.example
 
 # Node dependencies
 node_modules/
@@ -29,7 +29,7 @@ Thumbs.db
 # DigitalOcean build artifacts
 .cache/
 
-# Planning Documents — Credara DOCX source files
+# Planning Documents — DOCX source files
 Credara_Blueprint_v3.docx
 Credara_Build_Guide_v3.docx
 Credara_Explainer_v3.docx
@@ -38,8 +38,23 @@ Credara_Master_Prompt_File_v3.docx
 Credara_Missing_Pieces_v3.docx
 Credara_Tools_Guide_v3.docx
 
-# Build notes and planning documents
+# Planning Documents — TXT versions (same content, never commit)
+Credara_Blueprint_v3.txt
+Credara_Build_Guide_v3.txt
+Credara_Explainer_v3.txt
+Credara_Folder_Structure_v3.txt
+Credara_Master_Prompt_File_v3.txt
+Credara_Missing_Pieces_v3.txt
+Credara_Tools_Guide_v3.txt
+
+# Build notes (private progress log)
 CREDARA_BUILD_NOTES.md
+
+# DigitalOcean deployment config (contains secrets structure)
+.do/
+
+# Antigravity agent context
+.antigravity/
 
 # ngrok
 ngrok.exe
@@ -48,5 +63,3 @@ ngrok.exe
 # Logs
 *.log
 npm-debug.log*
-
-.antigravity/
