@@ -41,7 +41,14 @@ export default function Dashboard() {
 
   const computeBadge = () => {
     if (!profile) return 'SELF_REPORTED';
-    const flags = JSON.parse(profile.fraud_flags || '[]');
+    // fraud_flags may be a parsed array (pg auto-parses JSON columns),
+    // a JSON string, null, or empty string — handle all cases safely
+    let flags = [];
+    try {
+      const raw = profile.fraud_flags;
+      if (Array.isArray(raw)) flags = raw;
+      else if (raw && typeof raw === 'string' && raw.trim() !== '') flags = JSON.parse(raw);
+    } catch { flags = []; }
     const hasEv  = evidence?.has_evidence || false;
     if (flags.length > 2)                              return 'FLAGGED';
     if (worker?.id_verified && hasEv && flags.length === 0) return 'WORK_EVIDENCED';
