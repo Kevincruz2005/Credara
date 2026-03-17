@@ -25,7 +25,12 @@ Return ONLY valid JSON with this exact structure (no markdown fences):
 
   const raw = res.choices[0].message.content;
   console.log('[AI] skillExtractor result:', raw.substring(0, 200));
-  const clean = raw.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
+  // Strip markdown fences — Groq sometimes wraps despite instructions
+  const clean = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+  console.log('[AI] skillExtractor clean:', clean.substring(0, 100));
   return JSON.parse(clean);
 }
 

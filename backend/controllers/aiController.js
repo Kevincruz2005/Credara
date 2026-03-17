@@ -74,12 +74,16 @@ async function generateProfile(req, res) {
     if (!profile) return res.status(404).json({ success: false, error: 'Profile not found' });
 
     // Generate profile text
-    const profileText = await generateProfileText({
+    const rawProfileText = await generateProfileText({
       worker,
       profile,
       refs,
       answers: answers || []
     });
+    console.log('[aiController] raw profile response:', rawProfileText?.slice(0, 200));
+
+    // profileGenerator returns plain text — do NOT JSON.parse it
+    const profileText = rawProfileText || '';
 
     // ---- V3 SCORE FORMULA ----
     const confirmed = refs.filter(r => r.status === 'confirmed');
