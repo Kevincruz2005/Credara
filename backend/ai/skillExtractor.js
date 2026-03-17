@@ -25,7 +25,7 @@ Return ONLY valid JSON with this exact structure (no markdown fences):
 
   const raw = res.choices[0].message.content;
   console.log('[AI] skillExtractor result:', raw.substring(0, 200));
-  const clean = raw.replace(/```json|```/g, '').trim();
+  const clean = raw.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
   return JSON.parse(clean);
 }
 

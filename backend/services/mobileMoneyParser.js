@@ -26,7 +26,7 @@ Return ONLY valid JSON. No markdown fences. No explanation.`
   });
 
   console.log('[AI] mobileMoneyParser result:', res.choices[0].message.content.substring(0, 200));
-  const clean = res.choices[0].message.content.replace(/```json|```/g, '').trim();
+  const clean = res.choices[0].message.content.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
   const extracted = JSON.parse(clean);
 
   // THE KEY SIGNAL: cross-reference payer phones vs confirmed reference phones

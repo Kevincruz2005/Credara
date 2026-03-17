@@ -6,11 +6,12 @@ async function createVerificationSession(workerId) {
     const res = await axios.post(
       'https://verify.didit.me/v1/session/',
       {
+        client_id: process.env.DIDIT_CLIENT_ID,
         callback_url: `${process.env.WEBHOOK_BASE_URL}/api/fraud/id-callback`,
         vendor_data:  `worker_${workerId}`,
         kyc_features: { face_match: true, liveness: true, document_check: true }
       },
-      { headers: { Authorization: `Token ${process.env.DIDIT_API_KEY}` } }
+      { headers: { Authorization: `Bearer ${process.env.DIDIT_API_KEY}` } }
     );
     return res.data.session_url;
   } catch (err) {

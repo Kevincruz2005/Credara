@@ -23,7 +23,7 @@ async function verifyProfile(req, res) {
     const worker = workerRes.rows[0];
 
     const skillsRes = await db.query('SELECT skill_name FROM skills WHERE profile_id = $1', [doc.profile_id]);
-    const refsRes   = await db.query(`SELECT * FROM references WHERE profile_id = $1 AND status = 'confirmed'`, [doc.profile_id]);
+    const refsRes   = await db.query(`SELECT * FROM reference WHERE profile_id = $1 AND status = 'confirmed'`, [doc.profile_id]);
     const mmRes     = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1 ORDER BY id DESC LIMIT 1', [doc.profile_id]);
     const photosRes = await db.query(`SELECT file_url FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true`, [doc.profile_id]);
     const videoRes  = await db.query(`SELECT file_url FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'video' ORDER BY id DESC LIMIT 1`, [doc.profile_id]);

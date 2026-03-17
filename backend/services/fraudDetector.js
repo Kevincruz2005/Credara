@@ -3,7 +3,7 @@ const db = require('../db');
 async function analyzeFraudSignals(profileId) {
   try {
     const result = await db.query(
-      'SELECT * FROM references WHERE profile_id = $1',
+      'SELECT * FROM reference WHERE profile_id = $1',
       [profileId]
     );
     const refs = result.rows;

@@ -107,7 +107,7 @@ async function seed() {
       // References
       for (const ref of d.refsData) {
         await db.query(
-          `INSERT INTO references (profile_id, phone, line_type, is_voip, status, rating, reply_time_seconds, confirmed_at)
+          `INSERT INTO reference (profile_id, phone, line_type, is_voip, status, rating, reply_time_seconds, confirmed_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [profileId, ref.phone, ref.line_type, ref.is_voip, ref.status, ref.rating,
            ref.reply_time_seconds, ref.status === 'confirmed' ? new Date() : null]

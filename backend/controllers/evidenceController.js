@@ -9,7 +9,7 @@ const path = require('path');
 async function recalculateScore(profileId, workerId) {
   const workerRes  = await db.query('SELECT * FROM workers WHERE id = $1', [workerId]);
   const profileRes = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
-  const refsRes    = await db.query('SELECT * FROM references WHERE profile_id = $1', [profileId]);
+  const refsRes    = await db.query('SELECT * FROM reference WHERE profile_id = $1', [profileId]);
   const mmRes      = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1 ORDER BY id DESC LIMIT 1', [profileId]);
   const photosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true`, [profileId]);
   const videosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'video'`, [profileId]);
@@ -75,7 +75,7 @@ async function uploadStatement(req, res) {
 
     // Get confirmed reference phones for cross-reference check
     const refsRes = await db.query(
-      `SELECT phone FROM references WHERE profile_id = $1 AND status = 'confirmed'`, [profileId]
+      `SELECT phone FROM reference WHERE profile_id = $1 AND status = 'confirmed'`, [profileId]
     );
     const confirmedRefPhones = refsRes.rows.map(r => r.phone);
 

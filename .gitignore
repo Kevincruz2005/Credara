@@ -63,3 +63,5 @@ ngrok.exe
 # Logs
 *.log
 npm-debug.log*
+
+scripts/fix_schema.sql

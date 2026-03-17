@@ -4,13 +4,6 @@ const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
 });
 
-// Attach JWT token to every request automatically
-api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem('credara_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
 // ---- Auth ----
 export const register = (data) => api.post('/api/auth/register', data);
 export const login    = (data) => api.post('/api/auth/login', data);

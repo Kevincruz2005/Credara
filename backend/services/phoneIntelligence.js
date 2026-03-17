@@ -17,11 +17,14 @@ async function checkPhoneRisk(phone) {
       riskFlags.push('NON_FIXED_VOIP');
     }
 
-    return { lineType: lineType || 'unknown', riskFlags, isSafe: riskFlags.length === 0 };
+    // nonFixedVoip is highest-risk — block entirely, don't just flag
+    const isBlocked = lineType === 'nonFixedVoip';
+
+    return { lineType: lineType || 'unknown', riskFlags, isSafe: riskFlags.length === 0, isBlocked };
   } catch (err) {
     console.error('[phoneIntelligence] Lookup failed for', phone, err.message);
     // Fail open — don't block on lookup error
-    return { lineType: 'unknown', riskFlags: [], isSafe: true };
+    return { lineType: 'unknown', riskFlags: [], isSafe: true, isBlocked: false };
   }
 }
 

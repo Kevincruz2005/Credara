@@ -61,7 +61,7 @@ async function generateProfile(req, res) {
     // Fetch all data needed for score
     const profileRes = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
     const workerRes  = await db.query('SELECT * FROM workers WHERE id = $1', [req.worker.id]);
-    const refsRes    = await db.query('SELECT * FROM references WHERE profile_id = $1', [profileId]);
+    const refsRes    = await db.query('SELECT * FROM reference WHERE profile_id = $1', [profileId]);
     const evidenceRes = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1', [profileId]);
     const photosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true`, [profileId]);
     const videosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'video'`, [profileId]);

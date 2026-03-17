@@ -21,7 +21,7 @@ async function sendFollowupQuestion(referenceId, referencePhone, workerProfile) 
   });
 
   await db.query(
-    'UPDATE references SET followup_question = $1 WHERE id = $2',
+    'UPDATE reference SET followup_question = $1 WHERE id = $2',
     [q, referenceId]
   );
   console.log('[AI] followupChecker: sent follow-up question to ref', referenceId);
@@ -48,7 +48,7 @@ Return ONLY JSON: { "score": number, "reason": "string" }`
 
   const raw = res.choices[0].message.content;
   console.log('[AI] followupChecker result:', raw);
-  const clean = raw.replace(/```json|```/g, '').trim();
+  const clean = raw.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
   return JSON.parse(clean);
 }
 

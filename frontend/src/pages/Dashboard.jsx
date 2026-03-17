@@ -126,18 +126,7 @@ export default function Dashboard() {
                 <EvidenceCard />
               )}
 
-              {/* Fraud flags — shown to the worker too, but labelled differently */}
-              {profile?.fraud_flags && JSON.parse(profile.fraud_flags || '[]').length > 0 && (
-                <div className="card bg-yellow-50 border-yellow-200">
-                  <p className="font-bold text-yellow-800 text-sm">⚠️ Verification Signals</p>
-                  <p className="text-yellow-700 text-xs mt-1">Some signals were flagged that may limit your score.</p>
-                  <ul className="mt-2 space-y-0.5">
-                    {JSON.parse(profile.fraud_flags).map(f => (
-                      <li key={f} className="text-yellow-600 text-xs bg-yellow-100 px-2 py-0.5 rounded">{f.replace(/_/g, ' ')}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+
             </div>
 
             {/* Right column — profile + evidence summary + document */}

@@ -19,18 +19,23 @@ async function sendReferences(req, res) {
 
     for (const phone of phones) {
       // Layer 1: Twilio Lookup before every SMS
-      const { lineType, riskFlags, isSafe } = await checkPhoneRisk(phone);
+      const { lineType, riskFlags, isSafe, isBlocked } = await checkPhoneRisk(phone);
       const is_voip = !isSafe;
+
+      // nonFixedVoip: block entirely — do not save or send (Tools Guide: "Block from being added at all")
+      if (isBlocked) {
+        return res.status(400).json({ success: false, error: \`Blocked: \${phone} is a high-risk nonFixedVoip virtual number and cannot be used.\` });
+      }
 
       // Save reference record
       const refResult = await db.query(
-        `INSERT INTO references (profile_id, phone, line_type, is_voip, status, created_at)
+        `INSERT INTO reference (profile_id, phone, line_type, is_voip, status, created_at)
          VALUES ($1, $2, $3, $4, 'pending', NOW()) RETURNING id`,
         [profileId, phone, lineType, is_voip]
       );
       const refId = refResult.rows[0].id;
 
-      // Send SMS (even VoIP — but mark it)
+      // Send SMS (even regular VoIP — but mark it)
       try {
         await client.messages.create({
           body: `Did ${worker.name} work for you? Reply YES and rate them 1-5 (e.g. "YES 5"). From Credara.`,
@@ -66,7 +71,7 @@ async function handleWebhook(req, res) {
     // Find the reference
     const refRes = await db.query(
       `SELECT r.*, wp.worker_id, wp.id AS profile_id
-       FROM references r
+       FROM reference r
        JOIN work_profiles wp ON r.profile_id = wp.id
        WHERE r.phone = $1 AND r.status = 'pending'
        ORDER BY r.id DESC LIMIT 1`,
@@ -88,7 +93,7 @@ async function handleWebhook(req, res) {
       });
 
       await db.query(
-        'UPDATE references SET followup_answer = $1, followup_score = $2 WHERE id = $3',
+        'UPDATE reference SET followup_answer = $1, followup_score = $2 WHERE id = $3',
         [req.body.Body, score, ref.id]
       );
       return;
@@ -104,7 +109,7 @@ async function handleWebhook(req, res) {
     const replyTime = Math.floor((Date.now() - sentAt.getTime()) / 1000);
 
     await db.query(
-      `UPDATE references SET
+      `UPDATE reference SET
         status = $1, rating = $2, response_text = $3,
         confirmed_at = NOW(), reply_time_seconds = $4
        WHERE id = $5`,
@@ -133,7 +138,7 @@ async function getStatus(req, res) {
   try {
     const { profileId } = req.params;
     const result = await db.query(
-      'SELECT * FROM references WHERE profile_id = $1 ORDER BY id ASC',
+      'SELECT * FROM reference WHERE profile_id = $1 ORDER BY id ASC',
       [profileId]
     );
     const refs = result.rows;

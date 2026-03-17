@@ -22,7 +22,7 @@ Return ONLY valid JSON: { "consistent": boolean, "confidence": number (0-10), "d
 
     const raw = res.choices[0].message.content;
     console.log('[AI] photoAnalyzer result:', raw.substring(0, 150));
-    const clean = raw.replace(/```json|```/g, '').trim();
+    const clean = raw.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
     return JSON.parse(clean);
   } catch (err) {
     console.error('[photoAnalyzer] error:', err.message);

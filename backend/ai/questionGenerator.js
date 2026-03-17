@@ -23,7 +23,7 @@ Return ONLY a JSON array of 3 strings (no markdown fences):
 
   const raw = res.choices[0].message.content;
   console.log('[AI] questionGenerator result:', raw.substring(0, 200));
-  const clean = raw.replace(/```json|```/g, '').trim();
+  const clean = raw.replace(/```json|```/gi, '').replace(/^json\s*/i, '').trim();
   return JSON.parse(clean);
 }
 
