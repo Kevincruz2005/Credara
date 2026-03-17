@@ -93,7 +93,9 @@ async function generateProfile(req, res) {
     const avg_followup_score = confirmed.filter(r => r.followup_score).length > 0
       ? confirmed.filter(r => r.followup_score).reduce((s, r) => s + r.followup_score, 0) / confirmed.filter(r => r.followup_score).length : 0;
 
-    const fraud_flags = JSON.parse(profile.fraud_flags || '[]');
+    let fraud_flags;
+    try { fraud_flags = JSON.parse(profile.fraud_flags || '[]'); } catch { fraud_flags = []; }
+    if (!Array.isArray(fraud_flags)) fraud_flags = [];
     const voip_count  = refs.filter(r => r.is_voip).length;
     const fast_replies = refs.filter(r => r.reply_time_seconds && r.reply_time_seconds < 120).length;
     const prefix_cluster = fraud_flags.includes('PREFIX_CLUSTER');
@@ -135,13 +137,13 @@ async function generateProfile(req, res) {
     if ( worker.id_verified &&  has_evidence) score = Math.min(score, 100);
     if (fraud_flags.length > 2)              score = Math.min(score, 40);
 
-    // Save back to profile
+    // Save back to profile — profileText is plain text, never JSON parsed
     await db.query(
-      `UPDATE work_profiles SET profile_text = $1, consistency_score = $2, status = 'complete' WHERE id = $3`,
-      [profileText, Math.round(score), profileId]
+      'UPDATE work_profiles SET profile_text = $1, consistency_score = $2, status = $3 WHERE id = $4',
+      [profileText, Math.round(score), 'complete', profileId]
     );
 
-    res.json({ success: true, data: { profileText, consistencyScore: Math.round(score), fraudFlags: fraud_flags } });
+    res.json({ success: true, profile_text: profileText, data: { profileText, consistencyScore: Math.round(score), fraudFlags: fraud_flags } });
   } catch (err) {
     console.error('[aiController] generateProfile error:', err.message);
     res.status(500).json({ success: false, error: 'Profile generation failed' });
