@@ -30,7 +30,7 @@ async function sendFollowupQuestion(referenceId, referencePhone, workerProfile) 
 async function scoreFollowupAnswer(answer, workerProfile) {
   console.log('[AI] followupChecker: scoring answer...');
   const res = await gradient.chat.completions.create({
-    model: 'llama3.3-70b-instruct',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       {
         role: 'system',

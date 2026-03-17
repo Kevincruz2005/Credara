@@ -6,7 +6,7 @@ async function generateProfileText({ worker, profile, refs, answers }) {
 
   console.log('[AI] profileGenerator: generating professional profile...');
   const res = await gradient.chat.completions.create({
-    model: 'llama3.3-70b-instruct',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       {
         role: 'system',

@@ -7,7 +7,7 @@ async function parseStatement(fileBuffer, workerProfile) {
 
   console.log('[AI] mobileMoneyParser: extracting from statement...');
   const res = await gradient.chat.completions.create({
-    model: 'llama3.3-70b-instruct',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       {
         role: 'system',

@@ -4,7 +4,7 @@ async function analyzeWorkPhoto(imageBase64, jobTitle) {
   console.log('[AI] photoAnalyzer: checking photo consistency...');
   try {
     const res = await gradient.chat.completions.create({
-      model: 'llama3.3-70b-instruct',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',

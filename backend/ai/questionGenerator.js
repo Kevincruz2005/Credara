@@ -3,7 +3,7 @@ const gradient = require('./gradientClient');
 async function generateQuestions(structuredData) {
   console.log('[AI] questionGenerator: generating 3 questions...');
   const res = await gradient.chat.completions.create({
-    model: 'llama3.3-70b-instruct',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       {
         role: 'system',
