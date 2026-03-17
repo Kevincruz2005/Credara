@@ -9,10 +9,11 @@ async function transcribeAudio(buffer, originalName) {
   fs.writeFileSync(tmpFile, buffer);
 
   try {
-    console.log('[AI] transcriber: starting whisper-large-v3...');
+    console.log('[AI] using key:', process.env.GRADIENT_MODEL_KEY?.slice(0,10));
+    console.log('[AI] transcriber: starting whisper-large-v3-turbo...');
     const transcript = await gradient.audio.transcriptions.create({
       file: fs.createReadStream(tmpFile),
-      model: 'whisper-large-v3',
+      model: 'whisper-large-v3-turbo',
     });
     console.log('[AI] transcriber result:', transcript.text?.substring(0, 100) + '...');
     return transcript.text;

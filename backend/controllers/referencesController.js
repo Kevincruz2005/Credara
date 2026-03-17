@@ -24,7 +24,7 @@ async function sendReferences(req, res) {
 
       // nonFixedVoip: block entirely — do not save or send (Tools Guide: "Block from being added at all")
       if (isBlocked) {
-        return res.status(400).json({ success: false, error: \`Blocked: \${phone} is a high-risk nonFixedVoip virtual number and cannot be used.\` });
+        return res.status(400).json({ success: false, error: `Blocked: ${phone} is a high-risk nonFixedVoip virtual number and cannot be used.` });
       }
 
       // Save reference record
