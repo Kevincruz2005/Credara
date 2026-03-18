@@ -11,8 +11,10 @@ function computeBadgeLevel(worker, fraudFlags, hasEvidence) {
 async function verifyProfile(req, res) {
   try {
     const { share_link } = req.params;
+    console.log('[verify] looking up share_link:', share_link);
 
     const docRes = await db.query('SELECT * FROM documents WHERE share_link = $1', [share_link]);
+    console.log('[verify] found document:', docRes.rows[0]);
     if (!docRes.rows[0]) return res.status(404).json({ success: false, error: 'Profile not found' });
 
     const doc = docRes.rows[0];
@@ -32,7 +34,12 @@ async function verifyProfile(req, res) {
     await db.query('INSERT INTO verifications (profile_id, verifier_type) VALUES ($1, $2)', [doc.profile_id, 'web']);
 
     const structured  = profile.structured_data || {};
-    const fraud_flags = JSON.parse(profile.fraud_flags || '[]');
+    let fraud_flags = [];
+    try {
+      const raw = profile.fraud_flags;
+      if (Array.isArray(raw)) fraud_flags = raw;
+      else if (raw && typeof raw === 'string' && raw.trim()) fraud_flags = JSON.parse(raw);
+    } catch { fraud_flags = []; }
     const mmStats     = mmRes.rows[0] || null;
     const hasEvidence = !!(mmStats || photosRes.rows.length > 0 || videoRes.rows[0]);
     const badge_level = computeBadgeLevel(worker, fraud_flags, hasEvidence);

@@ -19,12 +19,12 @@ const COLORS = {
 
 function getBadgeInfo(badge_level) {
   switch (badge_level) {
-    case 'WORK_EVIDENCED':    return { label: '💎 WORK EVIDENCED',    color: COLORS.diamond };
-    case 'FULLY_VERIFIED':    return { label: '✅ FULLY VERIFIED',    color: COLORS.success };
-    case 'IDENTITY_VERIFIED': return { label: '✅ IDENTITY VERIFIED', color: COLORS.primary };
-    case 'SELF_REPORTED':     return { label: '🔵 SELF REPORTED',     color: COLORS.gray };
-    case 'FLAGGED':           return { label: '⚠️ FLAGGED',           color: COLORS.warning };
-    default:                  return { label: 'UNVERIFIED',           color: COLORS.gray };
+    case 'WORK_EVIDENCED':    return { label: '[WORK EVIDENCED]',    color: COLORS.diamond };
+    case 'FULLY_VERIFIED':    return { label: '[FULLY VERIFIED]',    color: COLORS.success };
+    case 'IDENTITY_VERIFIED': return { label: '[IDENTITY VERIFIED]', color: COLORS.primary };
+    case 'SELF_REPORTED':     return { label: '[SELF REPORTED]',     color: COLORS.gray };
+    case 'FLAGGED':           return { label: '[FLAGGED]',           color: COLORS.warning };
+    default:                  return { label: '[UNVERIFIED]',        color: COLORS.gray };
   }
 }
 

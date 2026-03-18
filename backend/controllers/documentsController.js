@@ -58,26 +58,33 @@ async function generateDocument(req, res) {
     });
 
     const pdfUrl = `/documents/${filename}`;
-    // Safe upsert — check first, then insert or update (avoids needing a UNIQUE constraint)
+    console.log('[documents] saving share_link:', shareLink, '| pdfUrl:', pdfUrl);
+    // Safe upsert — check first, then insert or update
     const existing = await db.query('SELECT id FROM documents WHERE profile_id = $1', [profileId]);
+    let savedDoc;
     if (existing.rows.length > 0) {
-      await db.query(
-        'UPDATE documents SET pdf_url = $1, share_link = $2, generated_at = NOW() WHERE profile_id = $3',
+      const upd = await db.query(
+        'UPDATE documents SET pdf_url = $1, share_link = $2, generated_at = NOW() WHERE profile_id = $3 RETURNING share_link, pdf_url',
         [pdfUrl, shareLink, profileId]
       );
+      savedDoc = upd.rows[0];
     } else {
-      await db.query(
-        'INSERT INTO documents (profile_id, pdf_url, share_link) VALUES ($1, $2, $3)',
+      const ins = await db.query(
+        'INSERT INTO documents (profile_id, pdf_url, share_link, generated_at) VALUES ($1, $2, $3, NOW()) RETURNING share_link, pdf_url',
         [profileId, pdfUrl, shareLink]
       );
+      savedDoc = ins.rows[0];
     }
+    console.log('[documents] saved row:', savedDoc);
 
     res.json({
       success: true,
+      share_link: savedDoc.share_link,
+      pdf_url:    savedDoc.pdf_url,
       data: {
-        pdfUrl,
-        shareLink,
-        verifyUrl: `${process.env.FRONTEND_URL}/verify/${shareLink}`
+        pdfUrl:    savedDoc.pdf_url,
+        shareLink: savedDoc.share_link,
+        verifyUrl: `${process.env.FRONTEND_URL}/verify/${savedDoc.share_link}`
       }
     });
   } catch (err) {
