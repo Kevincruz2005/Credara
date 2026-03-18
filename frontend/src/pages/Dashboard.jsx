@@ -9,6 +9,9 @@ import EvidenceCard from '../components/EvidenceCard';
 import { generateDocument, getEvidenceSummary } from '../services/api';
 import api from '../services/api';
 
+// Backend static file server — never the React dev server
+const BACKEND_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function Dashboard() {
   const { worker } = useAuth();
   const navigate = useNavigate();
@@ -203,7 +206,13 @@ export default function Dashboard() {
                   <p className="text-gray-600 text-sm mb-1">Share this link:</p>
                   <p className="font-mono text-primary text-sm mb-3 break-all">{docResult.verifyUrl}</p>
                   <div className="flex gap-3 flex-wrap">
-                    <a href={`${process.env.REACT_APP_API_URL}${docResult.pdfUrl}`} download className="btn-primary text-sm py-2 px-4">
+                    <a
+                      href={`${BACKEND_URL}${docResult.pdfUrl}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      download
+                      className="btn-primary text-sm py-2 px-4"
+                    >
                       ⬇️ Download PDF
                     </a>
                     <button

@@ -95,6 +95,8 @@ async function downloadDocument(req, res) {
     const filePath = path.join(__dirname, '../public', docRes.rows[0].pdf_url);
     if (!fs.existsSync(filePath)) return res.status(404).json({ success: false, error: 'File not found' });
 
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="credara-profile.pdf"`);
     res.download(filePath);
   } catch (err) {
     console.error('[documentsController] downloadDocument error:', err.message);
