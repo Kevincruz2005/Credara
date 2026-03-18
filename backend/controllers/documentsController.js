@@ -4,6 +4,16 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 
+// Safe JSON parser — handles null, empty string, and already-parsed arrays
+const safeParse = (val) => {
+  if (!val) return [];
+  try {
+    return typeof val === 'string' ? JSON.parse(val) : val;
+  } catch (e) {
+    return [];
+  }
+};
+
 function computeBadgeLevel(worker, fraudFlags, hasEvidence) {
   if (fraudFlags.length > 2)                                     return 'FLAGGED';
   if (worker.id_verified && hasEvidence && fraudFlags.length === 0) return 'WORK_EVIDENCED';
@@ -23,15 +33,18 @@ async function generateDocument(req, res) {
     const mmRes       = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1 ORDER BY id DESC LIMIT 1', [profileId]);
     const photosRes   = await db.query(`SELECT id FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true LIMIT 1`, [profileId]);
     const videosRes   = await db.query(`SELECT id FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'video' LIMIT 1`, [profileId]);
+    const evidenceResult = await db.query('SELECT COUNT(*) FROM work_evidence WHERE profile_id = $1', [profileId]);
 
     const profile = profileRes.rows[0];
     const worker  = workerRes.rows[0];
     if (!profile) return res.status(404).json({ success: false, error: 'Profile not found' });
 
-    // Correctly derive hasEvidence from DB — profile.has_evidence is NOT a column
-    const hasEvidence = !!(mmRes.rows[0] || photosRes.rows.length > 0 || videosRes.rows.length > 0);
-    const fraud_flags = JSON.parse(profile.fraud_flags || '[]');
-    const badge_level = computeBadgeLevel(worker, fraud_flags, hasEvidence);
+    // Correctly derive hasEvidence from DB
+    const has_evidence = parseInt(evidenceResult.rows[0].count) > 0;
+    const hasEvidence  = has_evidence || !!(mmRes.rows[0] || photosRes.rows.length > 0 || videosRes.rows.length > 0);
+    const fraud_flags  = safeParse(profile.fraud_flags);
+    const badge_level  = computeBadgeLevel(worker, fraud_flags, hasEvidence);
+    const profileText  = profile.profile_text || 'Profile pending generation.';
 
     const shareLink = uuidv4().split('-')[0] + '-' + (worker.name.toLowerCase().replace(/\s/g, '-'));
 
