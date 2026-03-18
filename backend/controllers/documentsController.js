@@ -58,13 +58,19 @@ async function generateDocument(req, res) {
     });
 
     const pdfUrl = `/documents/${filename}`;
-    // Upsert — always save/update so we never return a stale share link
-    await db.query(
-      `INSERT INTO documents (profile_id, pdf_url, share_link)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (profile_id) DO UPDATE SET pdf_url = EXCLUDED.pdf_url, share_link = EXCLUDED.share_link, generated_at = NOW()`,
-      [profileId, pdfUrl, shareLink]
-    );
+    // Safe upsert — check first, then insert or update (avoids needing a UNIQUE constraint)
+    const existing = await db.query('SELECT id FROM documents WHERE profile_id = $1', [profileId]);
+    if (existing.rows.length > 0) {
+      await db.query(
+        'UPDATE documents SET pdf_url = $1, share_link = $2, generated_at = NOW() WHERE profile_id = $3',
+        [pdfUrl, shareLink, profileId]
+      );
+    } else {
+      await db.query(
+        'INSERT INTO documents (profile_id, pdf_url, share_link) VALUES ($1, $2, $3)',
+        [profileId, pdfUrl, shareLink]
+      );
+    }
 
     res.json({
       success: true,
