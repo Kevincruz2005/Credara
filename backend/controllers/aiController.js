@@ -41,10 +41,21 @@ async function extractSkills(req, res) {
 async function followupQuestions(req, res) {
   try {
     const { profileId } = req.body;
-    const profile = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
-    if (!profile.rows[0]) return res.status(404).json({ success: false, error: 'Profile not found' });
+    const profileRes = await db.query(
+      'SELECT id, structured_data::TEXT, fraud_flags::TEXT FROM work_profiles WHERE id = $1', 
+      [profileId]
+    );
+    const profile = profileRes.rows[0];
+    if (!profile) return res.status(404).json({ success: false, error: 'Profile not found' });
 
-    const structured = profile.rows[0].structured_data;
+    let structured = {};
+    try {
+      if (profile.structured_data && typeof profile.structured_data === 'string') {
+        structured = JSON.parse(profile.structured_data);
+      } else if (profile.structured_data && typeof profile.structured_data === 'object') {
+        structured = profile.structured_data;
+      }
+    } catch { structured = {}; }
     const questions = await generateQuestions(structured);
     res.json({ success: true, data: { questions } });
   } catch (err) {
@@ -59,10 +70,14 @@ async function generateProfile(req, res) {
     const { profileId, answers } = req.body;
 
     // Fetch all data needed for score
-    const profileRes = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
+    const profileRes = await db.query(
+      `SELECT id, worker_id, raw_transcript, structured_data::TEXT, consistency_score, fraud_flags::TEXT, profile_text, status, created_at 
+       FROM work_profiles WHERE id = $1`, 
+      [profileId]
+    );
     const workerRes  = await db.query('SELECT * FROM workers WHERE id = $1', [req.worker.id]);
     const refsRes    = await db.query('SELECT * FROM reference WHERE profile_id = $1', [profileId]);
-    const evidenceRes = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1', [profileId]);
+    const evidenceRes = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1 ORDER BY id DESC LIMIT 1', [profileId]);
     const photosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true`, [profileId]);
     const videosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'video'`, [profileId]);
 
@@ -91,10 +106,14 @@ async function generateProfile(req, res) {
     const avg_rating = confirmed.length > 0
       ? confirmed.reduce((s, r) => s + (r.rating || 0), 0) / confirmed.length : 0;
     const avg_followup_score = confirmed.filter(r => r.followup_score).length > 0
-      ? confirmed.filter(r => r.followup_score).reduce((s, r) => s + r.followup_score, 0) / confirmed.filter(r => r.followup_score).length : 0;
+      ? confirmed.filter(r => r.followup_score).reduce((s, r) => s + parseFloat(r.followup_score), 0) / confirmed.filter(r => r.followup_score).length : 0;
 
-    let fraud_flags;
-    try { fraud_flags = JSON.parse(profile.fraud_flags || '[]'); } catch { fraud_flags = []; }
+    let fraud_flags = [];
+    try {
+      const raw = profile.fraud_flags;
+      if (Array.isArray(raw)) fraud_flags = raw;
+      else if (raw && typeof raw === 'string' && raw.trim()) fraud_flags = JSON.parse(raw);
+    } catch { fraud_flags = []; }
     if (!Array.isArray(fraud_flags)) fraud_flags = [];
     const voip_count  = refs.filter(r => r.is_voip).length;
     const fast_replies = refs.filter(r => r.reply_time_seconds && r.reply_time_seconds < 120).length;

@@ -26,7 +26,11 @@ async function generateDocument(req, res) {
   try {
     const { profileId } = req.body;
 
-    const profileRes  = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
+    const profileRes  = await db.query(
+      `SELECT id, worker_id, raw_transcript, structured_data::TEXT, consistency_score, fraud_flags::TEXT, profile_text, status, created_at 
+       FROM work_profiles WHERE id = $1`, 
+      [profileId]
+    );
     const workerRes   = await db.query('SELECT * FROM workers WHERE id = $1', [req.worker.id]);
     const skillsRes   = await db.query('SELECT * FROM skills WHERE profile_id = $1', [profileId]);
     const refsRes     = await db.query('SELECT * FROM reference WHERE profile_id = $1', [profileId]);

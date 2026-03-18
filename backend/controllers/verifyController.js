@@ -18,7 +18,12 @@ async function verifyProfile(req, res) {
     if (!docRes.rows[0]) return res.status(404).json({ success: false, error: 'Profile not found' });
 
     const doc = docRes.rows[0];
-    const profileRes = await db.query('SELECT * FROM work_profiles WHERE id = $1', [doc.profile_id]);
+    // Cast JSONB to TEXT to avoid 'pg' driver auto-parse errors on malformed data
+    const profileRes = await db.query(
+      `SELECT id, worker_id, raw_transcript, structured_data::TEXT, consistency_score, fraud_flags::TEXT, profile_text, status, created_at 
+       FROM work_profiles WHERE id = $1`, 
+      [doc.profile_id]
+    );
     const profile = profileRes.rows[0];
 
     const workerRes = await db.query('SELECT id, name, id_verified, created_at FROM workers WHERE id = $1', [profile.worker_id]);
@@ -33,13 +38,25 @@ async function verifyProfile(req, res) {
     // Log verification view
     await db.query('INSERT INTO verifications (profile_id, verifier_type) VALUES ($1, $2)', [doc.profile_id, 'web']);
 
-    const structured  = profile.structured_data || {};
+    // Safe parsing for both structured_data and fraud_flags
+    let structured = {};
+    try {
+      if (profile.structured_data && typeof profile.structured_data === 'string') {
+        structured = JSON.parse(profile.structured_data);
+      } else if (profile.structured_data && typeof profile.structured_data === 'object') {
+        structured = profile.structured_data;
+      }
+    } catch { structured = {}; }
+
     let fraud_flags = [];
     try {
       const raw = profile.fraud_flags;
       if (Array.isArray(raw)) fraud_flags = raw;
-      else if (raw && typeof raw === 'string' && raw.trim()) fraud_flags = JSON.parse(raw);
+      else if (raw && typeof raw === 'string' && raw.trim()) {
+        fraud_flags = JSON.parse(raw);
+      }
     } catch { fraud_flags = []; }
+
     const mmStats     = mmRes.rows[0] || null;
     const hasEvidence = !!(mmStats || photosRes.rows.length > 0 || videoRes.rows[0]);
     const badge_level = computeBadgeLevel(worker, fraud_flags, hasEvidence);

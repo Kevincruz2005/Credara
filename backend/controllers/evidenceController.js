@@ -8,7 +8,11 @@ const path = require('path');
 // Helper to recalculate score after evidence upload
 async function recalculateScore(profileId, workerId) {
   const workerRes  = await db.query('SELECT * FROM workers WHERE id = $1', [workerId]);
-  const profileRes = await db.query('SELECT * FROM work_profiles WHERE id = $1', [profileId]);
+  const profileRes = await db.query(
+    `SELECT id, worker_id, raw_transcript, structured_data::TEXT, consistency_score, fraud_flags::TEXT, profile_text, status, created_at 
+     FROM work_profiles WHERE id = $1`, 
+    [profileId]
+  );
   const refsRes    = await db.query('SELECT * FROM reference WHERE profile_id = $1', [profileId]);
   const mmRes      = await db.query('SELECT * FROM mobile_money_stats WHERE profile_id = $1 ORDER BY id DESC LIMIT 1', [profileId]);
   const photosRes  = await db.query(`SELECT * FROM work_evidence WHERE profile_id = $1 AND evidence_type = 'photo' AND is_consistent = true`, [profileId]);
@@ -24,7 +28,14 @@ async function recalculateScore(profileId, workerId) {
     ? confirmed.reduce((s, r) => s + (r.rating || 0), 0) / confirmed.length : 0;
   const avg_followup_score = confirmed.filter(r => r.followup_score).length > 0
     ? confirmed.filter(r => r.followup_score).reduce((s, r) => s + parseFloat(r.followup_score), 0) / confirmed.filter(r => r.followup_score).length : 0;
-  const fraud_flags = JSON.parse(profile.fraud_flags || '[]');
+  
+  let fraud_flags = [];
+  try {
+    const raw = profile.fraud_flags;
+    if (Array.isArray(raw)) fraud_flags = raw;
+    else if (raw && typeof raw === 'string' && raw.trim()) fraud_flags = JSON.parse(raw);
+  } catch { fraud_flags = []; }
+  
   const voip_count = refs.filter(r => r.is_voip).length;
   const fast_replies = refs.filter(r => r.reply_time_seconds && r.reply_time_seconds < 120).length;
   const prefix_cluster = fraud_flags.includes('PREFIX_CLUSTER');
@@ -121,8 +132,14 @@ async function uploadPhotos(req, res) {
     const { profileId } = req.body;
     if (!req.files?.length) return res.status(400).json({ success: false, error: 'No photos uploaded' });
 
-    const profileRes = await db.query('SELECT structured_data FROM work_profiles WHERE id = $1', [profileId]);
-    const jobTitle = profileRes.rows[0]?.structured_data?.job_title || 'worker';
+    const profileRes = await db.query('SELECT structured_data::TEXT FROM work_profiles WHERE id = $1', [profileId]);
+    let structured = {};
+    try {
+      const raw = profileRes.rows[0]?.structured_data;
+      if (raw && typeof raw === 'string') structured = JSON.parse(raw);
+      else if (raw && typeof raw === 'object') structured = raw;
+    } catch { structured = {}; }
+    const jobTitle = structured.job_title || 'worker';
 
     let photos_saved = 0, photos_flagged = 0;
 
